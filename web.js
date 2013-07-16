@@ -1,6 +1,6 @@
 var express = require('express');
 var fs = require('fs');
-var buffer = new Buffer(100);
+var buffer;;
 
 var app = express.createServer(express.logger());
 
@@ -10,7 +10,7 @@ if(err)
 {
 return console.log(err);
 }
-buffer.write(data.toString("utf-8"));
+buffer = data;
 });
   response.send(buffer.toString("utf-8"));
 });
