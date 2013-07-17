@@ -22,9 +22,11 @@ References:
 */
 
 var fs = require('fs');
+var urlget = require('restler');
 var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
+var URL_DEFAULT = "http://www.google.com";
 var CHECKSFILE_DEFAULT = "checks.json";
 
 var assertFileExists = function(infile) {
@@ -36,8 +38,24 @@ var assertFileExists = function(infile) {
     return instr;
 };
 
+var assertURLExist = function(url) {
+   urlget.get(url).on('complete', function(result) {
+	return result;
+   });
+};
+
+
 var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
+};
+
+
+var cheerioHtmlURL = function(url) {
+    var urlContent;
+    urlget.get(url).on('complete', function(result) {
+      urlContent = result;
+    });
+    return cheerio.load(urlContent);;
 };
 
 var loadChecks = function(checksfile) {
@@ -46,6 +64,17 @@ var loadChecks = function(checksfile) {
 
 var checkHtmlFile = function(htmlfile, checksfile) {
     $ = cheerioHtmlFile(htmlfile);
+    var checks = loadChecks(checksfile).sort();
+    var out = {};
+    for(var ii in checks) {
+        var present = $(checks[ii]).length > 0;
+        out[checks[ii]] = present;
+    }
+    return out;
+};
+
+var checkURL = function(url, checksfile) {
+    $ = cheerioHtmlURL(url);
     var checks = loadChecks(checksfile).sort();
     var out = {};
     for(var ii in checks) {
@@ -65,8 +94,17 @@ if(require.main == module) {
     program
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
+        .option('-u, --url <url>', 'URL to test', clone(assertURLExist), URL_DEFAULT)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    var checkJson;
+     if(program.url)
+     {
+	checkJson = checkURL(program.url, program.checks);
+      }
+     else
+     {
+       checkJson  = checkHtmlFile(program.file, program.checks);
+      }
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
