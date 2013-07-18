@@ -96,6 +96,11 @@ if(require.main == module) {
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-u, --url <url>', 'URL to test', clone(assertURLExist), URL_DEFAULT)
         .parse(process.argv);
+    if(process.argv.indexOf("--url") > 0 && process.argv.indexOf("--file") > 0)
+    {
+	console.error("Can not contain both file and url as arguments");
+    }
+    else {
     var checkJson;
      if(program.url)
      {
@@ -106,7 +111,7 @@ if(require.main == module) {
        checkJson  = checkHtmlFile(program.file, program.checks);
       }
     var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+    console.log(outJson); }
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
